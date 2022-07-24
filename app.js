@@ -10,14 +10,33 @@ app.set('view engine', 'handlebars')
 // 設定 static file ///////////////////////////////////////////
 app.use(express.static('public'))
 
+// 引入資料 ///////////////////////////////////////////////////
+const restaurantList = require('./restaurant.json')
+const restaurantMap = {}
+
+restaurantList.results.forEach((restaurant) => {
+  restaurantMap[restaurant.id] = restaurant
+})
+
 // 設定 routes ///////////////////////////////////////////////
 // 首頁
 app.get('/', (req, res) => {
-  res.render('index')
+  const restaurants = restaurantList.results
+  res.render('index', {restaurants: restaurants})
+})
+// 搜尋結果頁
+app.get('/search', (req, res) => {
+  const keyword = req.query.keyword.trim()
+  const restaurants = restaurantList.results.filter((restaurant) => {
+    return (restaurant.name.toLocaleLowerCase().includes(keyword.toLocaleLowerCase()) || restaurant.category.toLocaleLowerCase().includes(keyword.toLocaleLowerCase()))
+  })
+  res.render('index', {restaurants: restaurants, keyword: keyword})
 })
 // 餐廳介紹頁
-app.get('/restaurants/:id', (req, res) => {
-  res.render('show')
+app.get('/restaurants/:restaurant_id', (req, res) => {
+  const restaurantId = Number(req.params.restaurant_id)
+  const restaurant = restaurantMap[restaurantId]
+  res.render('show', {restaurant: restaurant})
 })
 
 // 啟動/監聽伺服器 ////////////////////////////////////////////
